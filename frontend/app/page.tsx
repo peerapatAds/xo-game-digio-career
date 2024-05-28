@@ -1,23 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Button,
-  IconButton,
-  Paper,
-  styled,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from "@mui/material";
-import { Camera } from "@mui/icons-material";
+import React, { useState } from "react";
+import { Box, Button, styled, TextField, Typography } from "@mui/material";
 import axios from "axios";
+import HistoryTable from "@/components/HistoryTable";
 
 type Props = {};
 
@@ -27,19 +13,12 @@ type record = {
   result: number;
 }[];
 
-type rowsData = {
-  no: string;
-  description: string;
-  winner: string;
-}[];
-
 const Home = (props: Props) => {
   const [gridSize, setGridSize] = useState(3);
   const [startGameShow, setStartGameShow] = useState(false);
   const [squares, setSquares] = useState<any[]>([]);
   const [xIsNext, setXIsNext] = useState(true);
   const [winner, setWinner] = useState(0);
-  const [rows, setRows] = useState<rowsData>([]);
   const [record, setRecord] = useState<record>([]);
 
   function startGame() {
@@ -247,32 +226,7 @@ const Home = (props: Props) => {
               </ButtonStartGame>
             </Box>
             <Box pt={6}>
-              <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Game no.</TableCell>
-                      <TableCell>Description</TableCell>
-                      <TableCell>Winner</TableCell>
-                      <TableCell>Replay</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rows.map((row, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{row.no}</TableCell>
-                        <TableCell>{row.description}</TableCell>
-                        <TableCell>{row.winner}</TableCell>
-                        <TableCell>
-                          <IconButton onClick={() => replayGame()}>
-                            <Camera />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <HistoryTable replayGame={replayGame}></HistoryTable>
             </Box>
           </Box>
         )}
