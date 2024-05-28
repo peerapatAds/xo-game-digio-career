@@ -1,17 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, styled, TextField, Typography } from "@mui/material";
 import axios from "axios";
 import HistoryTable from "@/components/HistoryTable";
+import BoardGame from "@/components/BoardGame";
+import GameService from "@/api/GameService";
 
 type Props = {};
-
-type record = {
-  row: number;
-  col: number;
-  result: number;
-}[];
 
 const Home = (props: Props) => {
   const [gridSize, setGridSize] = useState(3);
@@ -19,7 +15,6 @@ const Home = (props: Props) => {
   const [squares, setSquares] = useState<any[]>([]);
   const [xIsNext, setXIsNext] = useState(true);
   const [winner, setWinner] = useState(0);
-  const [record, setRecord] = useState<record>([]);
 
   function startGame() {
     let newSquares: any[] = [];
@@ -36,7 +31,6 @@ const Home = (props: Props) => {
     setStartGameShow(false);
     setSquares([]);
     setWinner(0);
-    setRecord([]);
   }
 
   function changeGridSize(value: number) {
@@ -44,72 +38,16 @@ const Home = (props: Props) => {
     setGridSize(value);
   }
 
-  const handleClick = (row: number, col: number) => {
-    const newSquares = squares;
-    if (newSquares[row][col] != 0) return;
-    newSquares[row][col] = xIsNext ? 1 : 2;
-    setSquares(newSquares);
-    setXIsNext(!xIsNext);
-    calculateWinner(newSquares);
-    let newArrRecord = [];
-    newArrRecord = record;
-    newArrRecord.push({ row: row, col: col, result: newSquares[row][col] });
-    setRecord(newArrRecord);
-  };
+  useEffect(() => {
+    if (!startGameShow) {
+      getHistory();
+    }
+  }, [startGameShow]);
 
-  const calculateWinner = (squares: any[]) => {
-    // แนวนอน
-    for (const row of squares) {
-      if (row.every((i: number) => i === 1)) {
-        setWinner(1);
-      }
-      if (row.every((i: number) => i === 2)) {
-        setWinner(2);
-      }
-    }
-    // แนวตั้ง
-    for (const row of squares[0].map((_: any, colIndex: string | number) =>
-      squares.map((row) => row[colIndex])
-    )) {
-      if (row.every((i: number) => i === 1)) {
-        setWinner(1);
-      }
-      if (row.every((i: number) => i === 2)) {
-        setWinner(2);
-      }
-    }
-    // แนวทะแยง
-    const diagonals: number[][] = [[], []];
-    for (let i = 0; i < squares.length; i++) {
-      diagonals[0].push(squares[i][i]);
-      diagonals[1].push(squares[squares.length - 1 - i][i]);
-    }
-    if (
-      diagonals[0].every((val) => val === 1) ||
-      diagonals[1].every((val) => val === 1)
-    ) {
-      setWinner(1);
-    }
-    if (
-      diagonals[0].every((val) => val === 2) ||
-      diagonals[1].every((val) => val === 2)
-    ) {
-      setWinner(2);
-    }
-  };
-
-  // useEffect(() => {
-  //   // save game
-  //   if (winner) {
-  //     axios.post("http://localhost:8080/api/saveGame", {
-  //       description: gridSize,
-  //       winner: winner,
-  //       record: record,
-  //     });
-  //   }
-  // }, [winner]);
-
-  function getHistory() {}
+  function getHistory() {
+    const res = GameService.getHistory().then((x) => x);
+    console.log(res);
+  }
 
   function replayGame() {}
 
@@ -121,10 +59,18 @@ const Home = (props: Props) => {
         </Typography>
         {startGameShow ? (
           <Box display={"grid"} p={6}>
-            <Typography fontWeight={700} fontSize={24}>
-              Grid Size: {gridSize} X {gridSize}
-            </Typography>
-            <Box mt={5} display={"grid"}>
+            <Box display={"flex"} justifyContent={"center"} gap={3} pt={2}>
+              <Typography fontWeight={700} fontSize={24}>
+                Grid Size: {gridSize} X {gridSize}
+              </Typography>
+              <ButtonStartGame
+                variant="contained"
+                onClick={() => restartGame()}
+              >
+                Restart
+              </ButtonStartGame>
+            </Box>
+            <Box my={6} display={"grid"}>
               <Typography fontWeight={700} fontSize={18}>
                 Player:
                 <span
@@ -140,66 +86,15 @@ const Home = (props: Props) => {
                 {winner ? "To Win!!!" : "To Move"}
               </Typography>
             </Box>
-            <Box my={5}>
-              <ButtonStartGame
-                variant="contained"
-                onClick={() => restartGame()}
-              >
-                Restart
-              </ButtonStartGame>
-            </Box>
-            <Box mt={2} id="board" display={"grid"} gap={1}>
-              {Array(gridSize)
-                .fill(0)
-                .map((_: any, row: number) => (
-                  <Box
-                    id="board-row"
-                    key={row}
-                    display={"flex"}
-                    justifyContent={"center"}
-                    gap={1}
-                  >
-                    {Array(gridSize)
-                      .fill(0)
-                      .map((_: any, col: number) => (
-                        <Square
-                          id="square"
-                          key={col}
-                          sx={{
-                            backgroundColor:
-                              winner != 0 && winner === squares[row][col]
-                                ? "#000"
-                                : "#fff",
-                            color:
-                              winner != 0 && winner === squares[row][col]
-                                ? "#fff"
-                                : "red",
-                            "&:hover": {
-                              backgroundColor:
-                                winner != 0 && winner === squares[row][col]
-                                  ? "#000"
-                                  : "#fff",
-                              color:
-                                winner != 0 && winner === squares[row][col]
-                                  ? "#fff"
-                                  : "red",
-                            },
-                          }}
-                          onClick={() => {
-                            if (winner) return;
-                            handleClick(row, col);
-                          }}
-                        >
-                          {squares.length && squares[row][col] === 1
-                            ? "X"
-                            : squares.length && squares[row][col] === 2
-                            ? "O"
-                            : ""}
-                        </Square>
-                      ))}
-                  </Box>
-                ))}
-            </Box>
+            <BoardGame
+              gridSize={gridSize}
+              winner={winner}
+              setWinner={setWinner}
+              squares={squares}
+              setSquares={setSquares}
+              xIsNext={xIsNext}
+              setXIsNext={setXIsNext}
+            ></BoardGame>
           </Box>
         ) : (
           <Box display={"grid"} p={6} justifyContent={"center"}>
@@ -244,14 +139,4 @@ const ButtonStartGame = styled(Button)(() => ({
   "&:hover": {
     backgroundColor: "#000",
   },
-}));
-
-const Square = styled(Button)(({ disabled }) => ({
-  backgroundColor: disabled ? "#E5E5E5" : "#fff",
-  width: "60px",
-  height: "60px",
-  border: "1px solid #000",
-  fontSize: "32px",
-  cursor: "pointer",
-  color: "red",
 }));
