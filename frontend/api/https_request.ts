@@ -1,5 +1,5 @@
 var axios = require("axios");
-const url = "http://localhost:8080/api/";
+const url = "http://localhost:8080/api";
 
 type ITypeApi = {
   path: string;

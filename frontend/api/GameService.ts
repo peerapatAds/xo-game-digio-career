@@ -17,7 +17,7 @@ const GameService = {
     return api.get({ path: "/history" });
   },
   gameSave(data: gameData) {
-    return api.post({ path: "/savegame", body: data });
+    return api.post({ path: "/save_game", body: data });
   },
 };
 
